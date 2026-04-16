@@ -10,15 +10,6 @@ Repo ini berisi **2 bagian** (dua-duanya dipakai):
 - **Request–Response** via **Socket**: `client_gui.py` ↔ `server.py`
 - **Publish–Subscribe** via **MQTT**: `client_gui.py` ↔ **Mosquitto Broker**, topik `chat/general`
 
-## Struktur Folder
-- `app_simple.py`
-- `client_gui.py`
-- `server.py`
-- `mqtt_client.py`
-- `templates/index_simple.html`
-- `static/css/animations.css`
-- `requirements.txt`
-
 ## Prasyarat
 - Windows + Python 3.x + pip
 - (Untuk bagian MQTT) **Mosquitto** berjalan di `localhost:1883`
