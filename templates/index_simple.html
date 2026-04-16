@@ -219,7 +219,7 @@
                 });
                 const data = await res.json();
                 
-                // Trigger animation only
+                // Ambil breakdown delay RR dari backend lalu jalankan animasi.
                 animateRR(data.send_delay, data.process_delay, data.recv_delay);
             } catch (e) {
                 console.error(e);
@@ -240,19 +240,20 @@
                 });
                 const data = await res.json();
                 
-                // Trigger animation only
+                // Ambil breakdown delay PS dari backend lalu jalankan animasi.
                 animatePS(data.send_delay, data.ack_delay, data.broadcast_delay);
             } catch (e) {
                 console.error(e);
             }
         }
 
+        // Batasi durasi animasi agar tidak terlalu cepat/lambat.
         function clampMs(value, minMs, maxMs) {
             return Math.min(maxMs, Math.max(minMs, value));
         }
 
         function animateRR(sendDelay, processDelay, recvDelay) {
-            // Lebih lambat + stabil (pakai minimum durasi biar tidak “kedip”)
+            // Visualisasi RR: request → proses → response.
             const TRAVEL_MULT = 30;
             const PROCESS_MULT = 5;
 
@@ -288,7 +289,7 @@
         }
 
         function animatePS(sendDelay, ackDelay, broadcastDelay) {
-            // Publish-Subscribe dibuat lebih lambat & halus
+            // Visualisasi PS: publish → ACK → broadcast.
             const PUBLISH_MULT = 28;
             const ACK_MULT = 18;
             const BROADCAST_MULT = 24;

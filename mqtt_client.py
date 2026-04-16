@@ -4,6 +4,7 @@ import uuid
 BROKER = "localhost"
 TOPIC = "chat/general"
 
+# MQTT client wrapper: connect, subscribe, terima pesan, dan publish.
 class MQTTClient:
     def __init__(self, username, callback, on_status=None):
         client_id = f"chat-{uuid.uuid4().hex[:10]}"
@@ -45,6 +46,7 @@ class MQTTClient:
             pass
 
     def on_connect(self, client, userdata, flags, rc):
+        # Saat terhubung, subscribe topik chat/general.
         if rc == 0:
             self._status("Status: mqtt connected")
             client.subscribe(TOPIC)
@@ -58,9 +60,10 @@ class MQTTClient:
             self._status("Status: mqtt disconnected")
 
     def on_message(self, client, userdata, msg):
+        # Terima pesan dari broker lalu teruskan ke callback aplikasi.
         message = msg.payload.decode()
         self.callback(message)
 
     def send_message(self, message):
-        # payload already contains username/id/timestamp; keep as-is
+        # Publish pesan ke topik chat/general (model PS).
         self.client.publish(TOPIC, message)

@@ -20,6 +20,7 @@ def _now_hms() -> str:
     return time.strftime("%H:%M:%S")
 
 
+# Buat payload berisi id+timestamp untuk hitung delay.
 def _make_payload(username: str, text: str) -> tuple[str, str, float]:
     msg_id = uuid.uuid4().hex[:8]
     sent_epoch = time.time()
@@ -27,6 +28,7 @@ def _make_payload(username: str, text: str) -> tuple[str, str, float]:
     return payload, msg_id, sent_epoch
 
 
+# Parse payload untuk ambil id/timestamp/sender/isi pesan.
 def _parse_payload(payload: str):
     # Returns (msg_id, sent_epoch, username, text) or None if unknown format
     try:
@@ -253,6 +255,7 @@ class ChatApp:
 
     # ===== SEND =====
     def send_message(self):
+        # Kirim pesan lewat Socket (RR) dan MQTT (PS) untuk dibandingkan.
         msg = self.entry_var.get().strip()
         self.entry_var.set("")
 
@@ -326,6 +329,7 @@ class ChatApp:
                 break
 
     def _handle_socket_message(self, payload: str) -> None:
+        # Hitung delay RR dari timestamp payload dan tampilkan ke panel RR.
         end = time.time()
         timestamp = _now_hms()
 
@@ -353,6 +357,7 @@ class ChatApp:
         self._ui(self._handle_mqtt_message, msg)
 
     def _handle_mqtt_message(self, msg: str) -> None:
+        # Hitung delay PS dari timestamp payload dan tampilkan ke panel PS.
         end = time.time()
         timestamp = _now_hms()
 

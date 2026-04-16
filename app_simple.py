@@ -22,12 +22,14 @@ messages = []
 
 @app.route('/')
 def index():
+    # Tampilkan halaman visualisasi simulasi (frontend).
     return render_template('index_simple.html')
 
 
 @app.route('/api/send', methods=['POST'])
 def send_message():
     """Kirim pesan dan hitung latency"""
+    # Kembalikan breakdown delay RR vs PS untuk kebutuhan animasi.
     data = request.json
     model = data.get('model', 'rr')  # 'rr' atau 'ps'
     message = data.get('message', '')

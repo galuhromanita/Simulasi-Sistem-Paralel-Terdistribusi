@@ -11,6 +11,7 @@ HOST = os.getenv("CHAT_SOCKET_HOST", "127.0.0.1")
 PORT = int(os.getenv("CHAT_SOCKET_PORT", "5000"))
 
 def handle_client(conn, addr):
+    # Terima pesan client, simulasikan proses, lalu kirim balik.
     print(f"[SERVER] Connected: {addr}")
     conn.settimeout(None)
     with clients_lock:
@@ -61,6 +62,7 @@ def handle_client(conn, addr):
             clients.remove(conn)
 
 def start_server():
+    # Jalankan server socket dan terima koneksi client.
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((HOST, PORT))
