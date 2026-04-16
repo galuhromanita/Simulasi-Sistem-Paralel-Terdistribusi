@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Sistem Terdistribusi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FDFCFF 0%, #F9F7FF 50%, #F7F9FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="max-w-4xl mx-auto">
+        <!-- HEADER -->
+        <header class="text-center mb-8" style="color: #7B8FB3;">
+            <h1 class="text-4xl font-bold mb-2">Simulasi Chatting</h1>
+            <p class="text-lg opacity-80">Request-Response vs Publish-Subscribe</p>
+        </header>
+
+        <!-- MAIN CONTAINER -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- REQUEST-RESPONSE SECTION -->
+            <div class="bg-white rounded-lg shadow-lg p-6" style="background: linear-gradient(135deg, #F4F8FD 0%, #F8F4FD 100%); border-top: 3px solid #C7D9F0;">
+                <h2 class="text-2xl font-bold mb-4" style="color: #8B9FCC;">◆ Request-Response (Socket)</h2>
+                <p class="text-gray-500 text-sm mb-3">Model Sinkron - Client menunggu response</p>
+
+                <div class="text-xs text-gray-600 mb-4" style="background: rgba(255,255,255,0.65); border: 1px solid #E8E8F0; border-radius: 8px; padding: 10px 12px;">
+                    <p class="font-bold mb-1" style="color: #7B8FB3;">Komponen Sistem (RR / Socket)</p>
+                    <ul class="list-disc pl-4 space-y-0.5">
+                        <li><span class="font-semibold">Socket Client</span> (GUI / pengirim)</li>
+                        <li><span class="font-semibold">Socket Server</span> (pemroses & pengirim response)</li>
+                        <li><span class="font-semibold">Pesan</span>: Request → Response (1-to-1, synchronous)</li>
+                    </ul>
+                </div>
+                
+                <!-- ANIMATED DIAGRAM RR -->
+                <div class="diagram-container mb-4" style="height: 250px; position: relative; background: linear-gradient(135deg, #F9FBFD 0%, #FDF9FD 100%); border-radius: 8px; border: 1px solid #E8E8F0;">
+                    <div class="connection-line line-rr"></div>
+                    
+                    <!-- Node Klien -->
+                    <div class="node client" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, #D4E4FF 0%, #C8E0FF 100%); border: 2px solid #B8CFF0;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">Socket Client</div>
+                            <div class="text-[10px] opacity-70">Pengirim</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Node Server -->
+                    <div class="node server" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, #D4E0D4 0%, #C8DCC8 100%); border: 2px solid #B8D0B8;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">Socket Server</div>
+                            <div class="text-[10px] opacity-70">Responder</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pesan Request -->
+                    <div id="rrMessageRequest" class="animated-message" style="display: none; background: linear-gradient(135deg, #D8E8FF 0%, #D0E4FF 100%); box-shadow: 0 3px 10px rgba(176, 200, 255, 0.25); border: 1px solid #C8DFF0;">
+                        → Request
+                    </div>
+                    
+                    <!-- Pesan Response -->
+                    <div id="rrMessageResponse" class="animated-message" style="display: none; background: linear-gradient(135deg, #D8E8D8 0%, #D0E4D0 100%); box-shadow: 0 3px 10px rgba(176, 200, 176, 0.25); border: 1px solid #C8E0C8;">
+                        ← Response
+                    </div>
+                    
+                    <!-- Processing Indicator -->
+                    <div id="rrProcessing" class="message-label" style="display: none; top: 25%; left: 50%; transform: translateX(-50%);">
+                        ⏱️ Pemrosesan...
+                    </div>
+                </div>
+                
+                <!-- INPUT & BUTTON RR -->
+                <input type="text" id="rrInput" class="w-full px-3 py-2 border rounded mb-2" placeholder="Tulis pesan..." style="border-color: #D0E0F0; border-width: 2px; background: #FCFDFF;">
+                <button onclick="sendRR()" class="w-full text-white font-bold py-2 rounded btn-send" style="background: linear-gradient(135deg, #C7D9F0 0%, #B8CFF0 100%);">
+                    KIRIM PESAN
+                </button>
+            </div>
+            
+            <!-- PUBLISH-SUBSCRIBE SECTION -->
+            <div class="bg-white rounded-lg shadow-lg p-6" style="background: linear-gradient(135deg, #FDF9F4 0%, #FDF6F9 100%); border-top: 3px solid #F0D4C8;">
+                <h2 class="text-2xl font-bold mb-4" style="color: #D09B7F;">⬡ Publish-Subscribe (MQTT)</h2>
+                <p class="text-gray-500 text-sm mb-3">Model Asinkron - Publisher langsung return</p>
+
+                <div class="text-xs text-gray-600 mb-4" style="background: rgba(255,255,255,0.65); border: 1px solid #F0E8E0; border-radius: 8px; padding: 10px 12px;">
+                    <p class="font-bold mb-1" style="color: #B8907F;">Komponen Sistem (PS / MQTT)</p>
+                    <ul class="list-disc pl-4 space-y-0.5">
+                        <li><span class="font-semibold">MQTT Client A</span>: Publisher (pengirim publish)</li>
+                        <li><span class="font-semibold">MQTT Broker</span> (Mosquitto): routing berdasarkan topik</li>
+                        <li><span class="font-semibold">MQTT Client B/C/D</span>: Subscriber (penerima broadcast)</li>
+                        <li><span class="font-semibold">Topik</span>: <span class="font-mono">chat/general</span></li>
+                    </ul>
+                </div>
+                
+                <!-- ANIMATED DIAGRAM PS -->
+                <div class="diagram-container mb-4" style="height: 250px; position: relative; background: linear-gradient(135deg, #FFFBF7 0%, #FDF9F7 100%); border-radius: 8px; border: 1px solid #F0E8E0;">
+                    <!-- Node Penerbit -->
+                    <div class="node client" style="position: absolute; left: 20px; top: 15%; transform: translateY(-50%); background: linear-gradient(135deg, #E8D4C8 0%, #E4CCC0 100%); border: 2px solid #D8C0B0;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">MQTT Client A</div>
+                            <div class="text-[10px] opacity-70">Publisher</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Node Broker -->
+                    <div class="node broker" style="position: absolute; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); background: linear-gradient(135deg, #E0D4E0 0%, #DCC8DC 100%); border: 2px solid #D0C0D0;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">Mosquitto</div>
+                            <div class="text-[10px] opacity-70">Broker</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nodes Pelanggan -->
+                    <div class="node subscriber" style="position: absolute; left: 10%; bottom: 5%; background: linear-gradient(135deg, #E8D9C8 0%, #E4D0C0 100%); border: 2px solid #D8C8B8;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">MQTT B</div>
+                            <div class="text-[10px] opacity-70">Subscriber</div>
+                        </div>
+                    </div>
+                    <div class="node subscriber" style="position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); background: linear-gradient(135deg, #E8D9C8 0%, #E4D0C0 100%); border: 2px solid #D8C8B8;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">MQTT C</div>
+                            <div class="text-[10px] opacity-70">Subscriber</div>
+                        </div>
+                    </div>
+                    <div class="node subscriber" style="position: absolute; right: 10%; bottom: 5%; background: linear-gradient(135deg, #E8D9C8 0%, #E4D0C0 100%); border: 2px solid #D8C8B8;">
+                        <div class="status-dot"></div>
+                        <div class="text-center leading-tight">
+                            <div class="font-semibold">MQTT D</div>
+                            <div class="text-[10px] opacity-70">Subscriber</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pesan Publish -->
+                    <div id="psMessagePublish" class="animated-message" style="display: none; background: linear-gradient(135deg, #E8D8C8 0%, #E4D0C0 100%); box-shadow: 0 3px 10px rgba(232, 216, 200, 0.25); border: 1px solid #D8CCC0;">
+                        → Publish
+                    </div>
+                    
+                    <!-- Pesan Broadcast -->
+                    <div id="psMessageBroadcast1" class="animated-message" style="display: none; background: linear-gradient(135deg, #EDD8C8 0%, #E9D0C0 100%); box-shadow: 0 3px 10px rgba(237, 216, 200, 0.25); border: 1px solid #DCC8B8;">
+                        ⇉ Broadcast
+                    </div>
+                    <div id="psMessageBroadcast2" class="animated-message" style="display: none; background: linear-gradient(135deg, #EDD8C8 0%, #E9D0C0 100%); box-shadow: 0 3px 10px rgba(237, 216, 200, 0.25); border: 1px solid #DCC8B8;">
+                        ⇉ Broadcast
+                    </div>
+                    <div id="psMessageBroadcast3" class="animated-message" style="display: none; background: linear-gradient(135deg, #EDD8C8 0%, #E9D0C0 100%); box-shadow: 0 3px 10px rgba(237, 216, 200, 0.25); border: 1px solid #DCC8B8;">
+                        ⇉ Broadcast
+                    </div>
+                    
+                    <!-- ACK Label -->
+                    <div id="psAck" class="message-label" style="display: none; top: 40%; left: 50%; transform: translateX(-50%);">
+                        ✓ ACK
+                    </div>
+                </div>
+                
+                <!-- INPUT & BUTTON PS -->
+                <input type="text" id="psInput" class="w-full px-3 py-2 border rounded mb-2" placeholder="Tulis pesan..." style="border-color: #E8D8D0; border-width: 2px; background: #FFFDFB;">
+                <button onclick="sendPS()" class="w-full text-white font-bold py-2 rounded btn-send" style="background: linear-gradient(135deg, #E8D4C8 0%, #DFC8BC 100%);">
+                    KIRIM PESAN
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- STYLESHEET untuk animasi keyframes -->
+    <style>
+        @keyframes rr-request {
+            from { left: 70px; top: 50%; }
+            to { left: calc(100% - 120px); top: 50%; }
+        }
+        @keyframes rr-response {
+            from { right: 70px; top: 50%; }
+            to { right: calc(100% - 120px); top: 50%; }
+        }
+        @keyframes ps-publish {
+            from { left: 70px; top: 15%; }
+            to { left: 50%; top: 50%; }
+        }
+        @keyframes ps-broadcast1 {
+            from { left: 50%; top: 50%; }
+            to { left: 10%; top: 85%; }
+        }
+        @keyframes ps-broadcast2 {
+            from { left: 50%; top: 50%; }
+            to { left: 50%; top: 85%; }
+        }
+        @keyframes ps-broadcast3 {
+            from { left: 50%; top: 50%; }
+            to { right: 10%; top: 85%; }
+        }
+    </style>
+
+    <script>
+        async function sendRR() {
+            const msg = document.getElementById('rrInput').value;
+            if (!msg) return;
+            
+            document.getElementById('rrInput').value = '';
+            
+            try {
+                const res = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: 'rr', message: msg, sender: 'Anda' })
+                });
+                const data = await res.json();
+                
+                // Trigger animation only
+                animateRR(data.send_delay, data.process_delay, data.recv_delay);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function sendPS() {
+            const msg = document.getElementById('psInput').value;
+            if (!msg) return;
+            
+            document.getElementById('psInput').value = '';
+            
+            try {
+                const res = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: 'ps', message: msg, sender: 'Anda' })
+                });
+                const data = await res.json();
+                
+                // Trigger animation only
+                animatePS(data.send_delay, data.ack_delay, data.broadcast_delay);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function clampMs(value, minMs, maxMs) {
+            return Math.min(maxMs, Math.max(minMs, value));
+        }
+
+        function animateRR(sendDelay, processDelay, recvDelay) {
+            // Lebih lambat + stabil (pakai minimum durasi biar tidak “kedip”)
+            const TRAVEL_MULT = 30;
+            const PROCESS_MULT = 5;
+
+            const slowSend = clampMs(sendDelay * TRAVEL_MULT, 2200, 5200);
+            const slowProcess = clampMs(processDelay * PROCESS_MULT, 2000, 5500);
+            const slowRecv = clampMs(recvDelay * TRAVEL_MULT, 2200, 5200);
+            
+            const msgReq = document.getElementById('rrMessageRequest');
+            const msgResp = document.getElementById('rrMessageResponse');
+            const processing = document.getElementById('rrProcessing');
+            
+            msgReq.style.display = 'block';
+            msgReq.style.animation = `none`;
+            msgReq.offsetHeight; // trigger reflow
+            msgReq.style.animation = `rr-request ${slowSend}ms ease-in-out forwards`;
+            
+            setTimeout(() => {
+                processing.style.display = 'block';
+            }, slowSend);
+            
+            setTimeout(() => {
+                processing.style.display = 'none';
+                msgResp.style.display = 'block';
+                msgResp.style.animation = `none`;
+                msgResp.offsetHeight;
+                msgResp.style.animation = `rr-response ${slowRecv}ms ease-in-out forwards`;
+            }, slowSend + slowProcess);
+            
+            setTimeout(() => {
+                msgReq.style.display = 'none';
+                msgResp.style.display = 'none';
+            }, slowSend + slowProcess + slowRecv + 50);
+        }
+
+        function animatePS(sendDelay, ackDelay, broadcastDelay) {
+            // Publish-Subscribe dibuat lebih lambat & halus
+            const PUBLISH_MULT = 28;
+            const ACK_MULT = 18;
+            const BROADCAST_MULT = 24;
+
+            const slowSend = clampMs(sendDelay * PUBLISH_MULT, 2400, 6000);
+            const slowAck = clampMs(ackDelay * ACK_MULT, 1400, 3500);
+            const slowBroadcast = clampMs(broadcastDelay * BROADCAST_MULT, 3200, 9000);
+            
+            const msgPub = document.getElementById('psMessagePublish');
+            const msgB1 = document.getElementById('psMessageBroadcast1');
+            const msgB2 = document.getElementById('psMessageBroadcast2');
+            const msgB3 = document.getElementById('psMessageBroadcast3');
+            const ackLabel = document.getElementById('psAck');
+            
+            msgPub.style.display = 'block';
+            msgPub.style.animation = `none`;
+            msgPub.offsetHeight;
+            msgPub.style.animation = `ps-publish ${slowSend}ms ease-in-out forwards`;
+            
+            setTimeout(() => {
+                ackLabel.style.display = 'block';
+            }, slowSend);
+            
+            setTimeout(() => {
+                ackLabel.style.display = 'none';
+                msgB1.style.display = 'block';
+                msgB2.style.display = 'block';
+                msgB3.style.display = 'block';
+                
+                msgB1.style.animation = `ps-broadcast1 ${slowBroadcast}ms ease-in-out forwards`;
+                msgB2.style.animation = `ps-broadcast2 ${slowBroadcast}ms ease-in-out forwards`;
+                msgB3.style.animation = `ps-broadcast3 ${slowBroadcast}ms ease-in-out forwards`;
+            }, slowSend + slowAck);
+            
+            setTimeout(() => {
+                msgPub.style.display = 'none';
+                msgB1.style.display = 'none';
+                msgB2.style.display = 'none';
+                msgB3.style.display = 'none';
+            }, slowSend + slowAck + slowBroadcast + 50);
+        }
+
+        // Enter key to send
+        document.getElementById('rrInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendRR();
+        });
+        document.getElementById('psInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendPS();
+        });
+    </script>
+
+</body>
+</html>
